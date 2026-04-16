@@ -6,8 +6,14 @@
 const cells    = document.querySelectorAll('.cell');
 const status   = document.getElementById('status');
 const restartBtn     = document.getElementById('restart');
+const scoreCatValue = document.getElementById('score-cat');
+const scoreDogValue = document.getElementById('score-dog');
 
 let state = createInitialState();
+let scoreState = {
+  X: 0,
+  O: 0,
+};
 
 const PLAYER_VISUAL_MAP = {
   X: '🐱',
@@ -34,6 +40,25 @@ function render() {
   });
 }
 
+function renderScoreboard() {
+  if (scoreCatValue) scoreCatValue.textContent = String(scoreState.X);
+  if (scoreDogValue) scoreDogValue.textContent = String(scoreState.O);
+}
+
+function registerScoreForWinner(player) {
+  if (!(player in scoreState)) return;
+  scoreState[player] += 1;
+  renderScoreboard();
+}
+
+function resetScoreForTests() {
+  scoreState = {
+    X: 0,
+    O: 0,
+  };
+  renderScoreboard();
+}
+
 function setStatus(msg, cls = '') {
   status.textContent = msg;
   status.className   = 'status' + (cls ? ` ${cls}` : '');
@@ -57,6 +82,7 @@ function handleClick(e) {
     state.gameOver = true;
     if (result.winner) {
       result.combo.forEach(i => cells[i].classList.add('winning'));
+      registerScoreForWinner(result.winner);
       setStatus(formatWinnerStatus(result.winner), 'win');
     } else {
       setStatus("It's a draw!", 'draw');
@@ -82,6 +108,7 @@ if (cells.length && status && restartBtn) {
 
   // Initial render
   render();
+  renderScoreboard();
   setStatus(formatTurnStatus(state.current));
 }
 
@@ -90,5 +117,14 @@ if (typeof module !== 'undefined' && module.exports) {
     toVisualMarker,
     formatTurnStatus,
     formatWinnerStatus,
+    renderScoreboard,
+    registerScoreForWinner,
+    resetScoreForTests,
+  };
+}
+
+if (typeof window !== 'undefined') {
+  window.__tictactoeTestHooks = {
+    resetScoreForTests,
   };
 }
